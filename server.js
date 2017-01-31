@@ -12,6 +12,11 @@ var fs = require('fs');
 
 var port = 3000;
 
+// reading the file out of the file system and caching it in this variable
+var stylesheet = fs.readFileSync('gallery.css');
+
+var imageNames = ['ace.jpg', 'bubble.jpg', 'chess.jpg', 'fern.jpg', 'mobile.jpg'];
+
 function serveImage(filename, req, res) {
     fs.readFile('images/' + filename, function(err, body) {
         if (err) {
@@ -38,15 +43,25 @@ var server = http.createServer(function(req, res) {
 
     switch(req.url) {
         case "/gallery":
+            var gHtml = imageNames.map(function(fileName) {
+                return '  <img src="' + fileName + '">';
+            }).join();
             var html = '<!doctype html>';
-                html += '<head><title>Gallery</title></head>';
+                html += '<head>';
+                html += '  <title>Gallery</title>';
+                html += '  <link href="gallery.css" rel="stylesheet" type="text/css">';
+                html += '</head>';
                 html += '<body>';
                 html += '  <h1>Gallery</h1>';
-                html += '  <image src="images/ace.jpg" alt="a fishing ace at work">';
+                html += gHtml;
                 html += '  <h1>Hello.</h1> Time is ' + Date.now();
-                html += '</body>'
+                html += '</body>';
             res.setHeader('Content-Type', 'text/html');
             res.end(html);
+            break;
+        case "/gallery.css":
+            res.setHeader('Content-Type', 'text/css');
+            res.end(stylesheet);
             break;
         case "/chess":
         case "/chess/":
