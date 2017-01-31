@@ -37,6 +37,17 @@ var server = http.createServer(function(req, res) {
      */
 
     switch(req.url) {
+        case "/gallery":
+            var html = '<!doctype html>';
+                html += '<head><title>Gallery</title></head>';
+                html += '<body>';
+                html += '  <h1>Gallery</h1>';
+                html += '  <image src="images/ace.jpg" alt="a fishing ace at work">';
+                html += '  <h1>Hello.</h1> Time is ' + Date.now();
+                html += '</body>'
+            res.setHeader('Content-Type', 'text/html');
+            res.end(html);
+            break;
         case "/chess":
         case "/chess/":
         case "/chess.jpg":
@@ -48,6 +59,13 @@ var server = http.createServer(function(req, res) {
         case "/fern.jpg":
         case "/fern.jpeg":
             serveImage('fern.jpg', req, res);
+            break;
+        case "/ace":
+        case "/ace/":
+        case "/ace.jpg":
+        case "/ace.jpeg":
+        case "/images/ace.jpg":
+            serveImage('ace.jpg', req, res);
             break;
         default:
             res.statusCode = 404;
