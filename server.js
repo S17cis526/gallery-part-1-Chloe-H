@@ -6,13 +6,14 @@
  * simple photo gallery web app.
  */
 
-// import the given module (?)
+// 'require' loads the specified library and binds it to the given variable
 var http = require('http');
 var fs = require('fs');
 
 var port = 3000;
 
 // reading the file out of the file system and caching it in this variable
+// we're in the same directory, so we just use the relative path to it
 var stylesheet = fs.readFileSync('gallery.css');
 
 var imageNames = ['ace.jpg', 'bubble.jpg', 'chess.jpg', 'fern.jpg', 'mobile.jpg'];
@@ -34,8 +35,10 @@ function serveImage(filename, req, res) {
 
 // create a server
 var server = http.createServer(function(req, res) {
+    // function to handle requests
     // anon fcn uses createServer's context instead of creating its own scope
-    // you can totally mess with the method's code this way using 'this'
+    // (i.e. it uses the scope of the object it's in)
+    // you can totally exploit a library's code this way using 'this'
 
     /* serveImage(req.url, req, res);
      * don't do this, it's insecure
