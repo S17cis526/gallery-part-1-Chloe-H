@@ -16,20 +16,68 @@ var port = 3000;
 // we're in the same directory, so we just use the relative path to it
 var stylesheet = fs.readFileSync('gallery.css');
 
+// hard-coded :(
 var imageNames = ['ace.jpg', 'bubble.jpg', 'chess.jpg', 'fern.jpg', 'mobile.jpg'];
+
+function getImageNames(callback) {
+    fs.readdir('images', function(err, fileNames) {
+        if (err) {
+            callback(err, undefined); // 'false' or 'null' would also work
+        }
+        else {
+            callback(undefined, fileNames); // again, 'false' or 'null' would work
+        }
+    });
+}
+
+function imageNamesToTags(fileNames) {
+    return fileNames.map(function(fileName) {
+        return '<img src="' + fileName + '" alt="' + fileName + '">';
+    });
+}
 
 function serveImage(filename, req, res) {
     fs.readFile('images/' + filename, function(err, body) {
         if (err) {
             console.error(err);
-            res.statusCode = 500;
-            res.statusMessage = "ooooooops"
+            res.statusCode = 404;
+            res.statusMessage = "Resource not found (ooooooops)";
             res.end("OH NO");
             return;
         }
 
         res.setHeader("Content-Type", "image/jpeg");
         res.end(body);
+    });
+}
+
+function buildGallery(imageTags) {
+    var html = '<!doctype html>';
+        html += '<head>';
+        html += '  <title>Gallery</title>';
+        html += '  <link href="gallery.css" rel="stylesheet" type="text/css">';
+        html += '</head>';
+        html += '<body>';
+        html += '  <h1>Gallery</h1>';
+        html += imageNamesToTags(imageTags).join('');
+        /* html += '  <h1>Hello.</h1> Time is ' + Date.now(); */
+        html += '</body>';
+
+    return html;
+}
+
+function serveGallery(req, res) {
+    getImageNames(function(err, imageNames) {
+        if (err) {
+            console.error(err);
+
+            res.statusCode = 500; // general server error
+            res.statusMessage = "Server error";
+            res.end();
+            return; // avoiding lots of potential nesting
+        }
+        res.setHeader('Content-Type', 'text/html');
+        res.end(buildGallery(imageNames));
     });
 }
 
@@ -45,50 +93,16 @@ var server = http.createServer(function(req, res) {
      */
 
     switch(req.url) {
-        case "/gallery":
-            var gHtml = imageNames.map(function(fileName) {
-                return '  <img src="' + fileName + '">';
-            }).join();
-            var html = '<!doctype html>';
-                html += '<head>';
-                html += '  <title>Gallery</title>';
-                html += '  <link href="gallery.css" rel="stylesheet" type="text/css">';
-                html += '</head>';
-                html += '<body>';
-                html += '  <h1>Gallery</h1>';
-                html += gHtml;
-                html += '  <h1>Hello.</h1> Time is ' + Date.now();
-                html += '</body>';
-            res.setHeader('Content-Type', 'text/html');
-            res.end(html);
+        case '/':
+        case '/gallery':
+            serveGallery(req, res);
             break;
-        case "/gallery.css":
+        case '/gallery.css':
             res.setHeader('Content-Type', 'text/css');
             res.end(stylesheet);
             break;
-        case "/chess":
-        case "/chess/":
-        case "/chess.jpg":
-        case "/chess.jpeg":
-            serveImage('chess.jpg', req, res);
-            break;
-        case "/fern":
-        case "/fern/":
-        case "/fern.jpg":
-        case "/fern.jpeg":
-            serveImage('fern.jpg', req, res);
-            break;
-        case "/ace":
-        case "/ace/":
-        case "/ace.jpg":
-        case "/ace.jpeg":
-        case "/images/ace.jpg":
-            serveImage('ace.jpg', req, res);
-            break;
         default:
-            res.statusCode = 404;
-            res.statusMessage = "Not found";
-            res.end();
+            serveImage(req.url, req, res);
     }
 });
 
