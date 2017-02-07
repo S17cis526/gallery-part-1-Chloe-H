@@ -6,17 +6,14 @@
  * simple photo gallery web app.
  */
 
-// 'require' loads the specified library and binds it to the given variable
 var http = require('http');
 var fs = require('fs');
 
 var port = 3000;
+var title = "Gallery";
 
-// reading the file out of the file system and caching it in this variable
-// we're in the same directory, so we just use the relative path to it
 var stylesheet = fs.readFileSync('gallery.css');
 
-// hard-coded :(
 var imageNames = ['ace.jpg', 'bubble.jpg', 'chess.jpg', 'fern.jpg', 'mobile.jpg'];
 
 function getImageNames(callback) {
@@ -54,11 +51,15 @@ function serveImage(filename, req, res) {
 function buildGallery(imageTags) {
     var html = '<!doctype html>';
         html += '<head>';
-        html += '  <title>Gallery</title>';
+        html += '  <title>' + title + '</title>';
         html += '  <link href="gallery.css" rel="stylesheet" type="text/css">';
         html += '</head>';
         html += '<body>';
-        html += '  <h1>Gallery</h1>';
+        html += '  <h1>' + title + '</h1>';
+        html += '  <form action="">';
+        html += '    <input type="text" name="title">';
+        html += '    <input type="submit" value="Change' + title + 'Title">';
+        html += '  </form>';
         html += imageNamesToTags(imageTags).join('');
         /* html += '  <h1>Hello.</h1> Time is ' + Date.now(); */
         html += '</body>';
@@ -83,16 +84,13 @@ function serveGallery(req, res) {
 
 // create a server
 var server = http.createServer(function(req, res) {
-    // function to handle requests
-    // anon fcn uses createServer's context instead of creating its own scope
-    // (i.e. it uses the scope of the object it's in)
-    // you can totally exploit a library's code this way using 'this'
+    // we should have at most two parts when splitting the URL like this:
+    // a resource and a querystring separated by a '?'
+    var url = req.url.split('?');
+    var resource = url[0];
+    var queryString = url[1];
 
-    /* serveImage(req.url, req, res);
-     * don't do this, it's insecure
-     */
-
-    switch(req.url) {
+    switch(resource) {
         case '/':
         case '/gallery':
             serveGallery(req, res);
@@ -106,10 +104,6 @@ var server = http.createServer(function(req, res) {
     }
 });
 
-// listen to the given port
 server.listen(port, function() {
     console.log("listening on Port " + port);
 });
-
-// semicolons AND newline characters delimit lines - don't need both
-// you can put multiple lines on one line if you use semicolons, though
