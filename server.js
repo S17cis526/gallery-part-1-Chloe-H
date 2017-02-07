@@ -8,10 +8,13 @@
 
 var http = require('http');
 var fs = require('fs');
+var url = require('url');
 
 var port = 3000;
-var title = "Gallery";
 
+/* var defaultConfig = {title: "Gallery"}; */
+
+var config = JSON.parse(fs.readFileSync('config.json') /* || defaultConfig */);
 var stylesheet = fs.readFileSync('gallery.css');
 
 var imageNames = ['ace.jpg', 'bubble.jpg', 'chess.jpg', 'fern.jpg', 'mobile.jpg'];
@@ -48,19 +51,46 @@ function serveImage(filename, req, res) {
     });
 }
 
+function uploadImage(req, res) {
+    var body = '';
+    // req.on('event_name', event_handler)
+    req.on('error', function() {
+        res.statusCode = 500;
+        res.end();
+    }); // we're donezo
+    req.on('data', function(data) {
+        body += data;
+    });
+    req.on('end', function() {
+        fs.writeFile('filename', body, function(err) {
+            if (err) {
+                console.error(err);
+                res.statusCode = 500;
+                res.end();
+                return;
+            }
+            serveGallery(req, res);
+        });
+    });
+}
+
 function buildGallery(imageTags) {
     var html = '<!doctype html>';
         html += '<head>';
-        html += '  <title>' + title + '</title>';
+        html += '  <title>' + config.title + '</title>';
         html += '  <link href="gallery.css" rel="stylesheet" type="text/css">';
         html += '</head>';
         html += '<body>';
-        html += '  <h1>' + title + '</h1>';
+        html += '  <h1>' + config.title + '</h1>';
         html += '  <form action="">';
         html += '    <input type="text" name="title">';
-        html += '    <input type="submit" value="Change' + title + 'Title">';
+        html += '    <input type="submit" value="Change Gallery Title">';
         html += '  </form>';
         html += imageNamesToTags(imageTags).join('');
+        html += '<form action="" method="POST">';
+        html += '  <input type="file" name="image">';
+        html += '  <input type="submit" value="Upload Image">';
+        html += '</form>';
         /* html += '  <h1>Hello.</h1> Time is ' + Date.now(); */
         html += '</body>';
 
@@ -82,18 +112,34 @@ function serveGallery(req, res) {
     });
 }
 
-// create a server
 var server = http.createServer(function(req, res) {
     // we should have at most two parts when splitting the URL like this:
     // a resource and a querystring separated by a '?'
+    var urlParts = url.parse(req.url);
+
+    /*
     var url = req.url.split('?');
     var resource = url[0];
     var queryString = url[1];
+    */
 
-    switch(resource) {
+    if (urlParts.query) {
+        var matches = /title=(.+)($|&)/.exec(urlParts.query);
+
+        if (matches && matches[1]) {
+            config.title = decodeURIComponent(matches[1]);
+            fs.writeFile('config.json', JSON.stringify(config)); // JavaScript Object Serialization Notation
+        }
+    }
+
+    switch(urlParts.pathname) {
         case '/':
         case '/gallery':
-            serveGallery(req, res);
+            if (req.method == 'GET') {
+                serveGallery(req, res);
+            } else if (req.method == 'POST') {
+                uploadPicture(req, res);
+            }
             break;
         case '/gallery.css':
             res.setHeader('Content-Type', 'text/css');
