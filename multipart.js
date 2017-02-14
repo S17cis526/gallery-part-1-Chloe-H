@@ -141,7 +141,7 @@ function parseContent(buffer, callback) {
   // multipart content
   var index = buffer.indexOf(DOUBLE_CRLF);
   var head = buffer.slice(0, index).toString();
-  var body = buffer.slice(index + 4, buffer.length);
+  var body = buffer.slice(index + 4, buffer.length - index - 4); // fixed
 
   // We need to parse the headers from the head section
   // these will be stored as an associative array
