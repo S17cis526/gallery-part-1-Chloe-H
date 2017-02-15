@@ -28,8 +28,9 @@ function multipart(req, res, next) {
   // and responding with a 500 server error
   req.on('error', function(err){
     console.log(err);
-    statusCode = 500;
-    statusMessage = "Server error";
+    res.statusCode = 500;
+    res.statusMessage = "Server error";
+    res.end("Server err");
   });
 
   // Handle data events by appending the new
@@ -141,7 +142,7 @@ function parseContent(buffer, callback) {
   // multipart content
   var index = buffer.indexOf(DOUBLE_CRLF);
   var head = buffer.slice(0, index).toString();
-  var body = buffer.slice(index + 4, buffer.length - index - 4); // fixed
+  var body = buffer.slice(index + 4, buffer.length - index - 4);
 
   // We need to parse the headers from the head section
   // these will be stored as an associative array
@@ -172,6 +173,6 @@ function parseContent(buffer, callback) {
     callback(false, [name[1], {filename: filename[1], contentType: contentType, data: body}]);
   } else {
     // send the key/value pair using the callback
-    callback(false, [name[1], buffer.toString()]);
+    callback(false, [name[1], body.toString()]);
   }
 }
