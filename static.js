@@ -61,7 +61,7 @@ function loadDir(directory) {
 }
 
 function isCached(path) {
-    return files[path] != undefined; // forces result to be absolutely boolean, rather than truthy or falsey
+    return files[path] != undefined; // forces result to be truly boolean rather than truthy or falsey - good practice when a boolean result is expected
 }
 
 function serveFile(path, req, res) {
